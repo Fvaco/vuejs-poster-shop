@@ -8,7 +8,8 @@ new Vue({
       cart: [],
       search: "",
       lastSearch: '',
-      searching: false
+      searching: false,
+      price: PRICE
     };
   },
   filters: {
@@ -37,6 +38,7 @@ new Vue({
     },
     decrement(item) {
       item.qty--;
+      this.total -= PRICE;
       if (item.qty === 0) {
         this.cart.splice(
           this.cart.findIndex(element => element.id === item.id),
