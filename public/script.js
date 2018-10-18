@@ -1,13 +1,15 @@
 const PRICE = 9.99;
+const LOAD_NUM = 10;
 new Vue({
   el: "#app",
   data() {
     return {
       total: 0,
       items: [],
+      results: [],
       cart: [],
       search: "",
-      lastSearch: '',
+      lastSearch: "",
       searching: false,
       price: PRICE
     };
@@ -17,7 +19,22 @@ new Vue({
       return `$${value.toFixed(2)}`;
     }
   },
+  computed: {
+    noMoreItems() {
+      return this.results.length && this.items.length >= this.results.length;
+    }
+  },
   methods: {
+    appendItems() {
+      if (this.results.length) {
+        if (this.items.length < this.results.length) {
+          this.items = this.items.concat(
+            this.results.slice(this.items.length, this.items.length + LOAD_NUM)
+          );
+        }
+      }
+    },
+
     addItem(index) {
       this.total += PRICE;
       let { id, title } = this.items[index];
@@ -47,20 +64,23 @@ new Vue({
       }
     },
     onSubmit() {
-        
+      if (this.search.length) {
         this.items = [];
-        if(this.search.length){
-            this.searching=true;
-            this.$http
-            .get(`/search/${this.search}`)
-            .then(({ data }) => {
-              console.log(data);
-              this.items = data;
-              this.lastSearch = this.search;
-              this.searching=false;
-            });
-        }
-      
+        this.searching = true;
+        this.$http.get(`/search/${this.search}`).then(({ data }) => {
+          this.results = data;
+          this.items = this.results.slice(0, LOAD_NUM);
+          this.lastSearch = this.search;
+          this.searching = false;
+        });
+      }
     }
+  },
+  mounted() {
+    const elem = document.getElementById("product-list-bottom");
+    const watcher = scrollMonitor.create(elem);
+    watcher.enterViewport(() => {
+      this.appendItems();
+    });
   }
 });
